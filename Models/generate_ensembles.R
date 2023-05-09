@@ -21,7 +21,7 @@ s3 <- "neon4cast-forecasts/parquet/aquatics/"
 
 
 # when do you want to generate the MMEs for
-forecast_date <- as.character(Sys.Date())
+forecast_date <- as.character(Sys.Date() - days(1))
 
 # generate ensembles
 if (dir.exists('./Forecasts/ensembles') != T) {
