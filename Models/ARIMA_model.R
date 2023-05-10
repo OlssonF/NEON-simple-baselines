@@ -94,10 +94,10 @@ message('ARIMA fitted')
 
 # Forecast using the fitted model
 ARIMA_fable <- ARIMA_model %>%
-  generate(new_data = test_scenarios, bootstrap = T, times = 100) %>%
+  generate(new_data = test_scenarios, bootstrap = T, times = 10) %>%
   mutate(variable = 'temperature',
          # Recode the ensemble number based on the scenario and replicate
-         parameter = as.numeric(.rep) + (100 * (as.numeric(.scenario) - 1)))  %>%
+         parameter = as.numeric(.rep) + (10 * (as.numeric(.scenario) - 1)))  %>%
   filter(datetime > Sys.Date())
 message('forecast generated')
 
