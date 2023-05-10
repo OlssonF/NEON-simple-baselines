@@ -42,7 +42,7 @@ create_mme <- function(forecast_models, # vector of list of model names
         
         group_by(site_id, datetime, model_id) |> 
         # sample from the distribution based on the mean and sd
-        dpylr::reframe(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
+        dplyr::reframe(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
         group_by(site_id, datetime) |> 
         # parameter value needs to be character
         mutate(parameter = as.character(row_number()),
