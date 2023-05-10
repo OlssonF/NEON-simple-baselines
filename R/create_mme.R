@@ -42,7 +42,7 @@ create_mme <- function(forecast_models, # vector of list of model names
         
         group_by(site_id, datetime, model_id) |> 
         # sample from the distribution based on the mean and sd
-        summarise(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
+        reframe(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
         group_by(site_id, datetime) |> 
         # parameter value needs to be character
         mutate(parameter = as.character(row_number()),
@@ -55,7 +55,7 @@ create_mme <- function(forecast_models, # vector of list of model names
       forecast_sample <- forecast %>%
         distinct(parameter) %>%
         slice_sample(n = sample) %>%
-        left_join(., forecast, by = c("parameter")) %>%
+        left_join(., forecast, by = "parameter", multiple = 'all') %>%
         mutate(#model_id = ensemble_name, 
                reference_datetime = forecast_date,
                parameter = as.character(parameter)) 
@@ -98,5 +98,10 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   message(ensemble_name, ' generated')
   
-  neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  valid <- neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  
+  if (!valid) {
+    file.remove(file.path('./Forecasts/ensembles', filename))
+    message('forecast not valid')
+  }
 }
