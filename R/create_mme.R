@@ -55,7 +55,7 @@ create_mme <- function(forecast_models, # vector of list of model names
       forecast_sample <- forecast %>%
         distinct(parameter) %>%
         slice_sample(n = sample) %>%
-        left_join(., forecast, by = c("parameter")) %>%
+        left_join(., forecast, by = "parameter", multiple = 'all') %>%
         mutate(#model_id = ensemble_name, 
                reference_datetime = forecast_date,
                parameter = as.character(parameter)) 
@@ -101,5 +101,13 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
   
-  return(filename)
+  
+  valid <- neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  
+  if (!valid) {
+    file.remove(file.path('./Forecasts/ensembles', filename))
+    message('forecast not valid')
+  } else {
+    return(filename)
+  }
 }
