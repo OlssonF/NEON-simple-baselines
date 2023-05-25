@@ -94,9 +94,12 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   filename <- paste0('aquatics-', forecast_date, '-', ensemble_name, '.csv.gz')
   mme_forecast |>
+    select(-any_of(c('pubDate', 'date'))) |> 
     readr::write_csv(file.path('./Forecasts/ensembles', filename))
   
   message(ensemble_name, ' generated')
   
   neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  
+  return(filename)
 }
