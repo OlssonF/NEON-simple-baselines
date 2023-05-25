@@ -4,7 +4,7 @@ on:
   - cron: "0 23 * * *"
 
 jobs:
-  build:
+  baseline_ensemble:
     runs-on: ubuntu-latest
     container:
       image: eco4cast/rocker-neon4cast
@@ -13,7 +13,42 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          
-# Point to the right path, run the right Rscript command
       - name: Run ensemble generation
-        run: Rscript Models/generate_ensembles.R 
+        run: Rscript Models/baseline_ensemble.R 
+  
+  fARIMA_clim_ensemble:
+    runs-on: ubuntu-latest
+    container:
+      image: eco4cast/rocker-neon4cast
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run ensemble generation
+        run: Rscript Models/fARIMA_clim_ensemble.R       
+
+  ler_ensemble:
+    runs-on: ubuntu-latest
+    container:
+      image: eco4cast/rocker-neon4cast
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run ensemble generation
+        run: Rscript Models/flare_ler_ensemble.R   
+        
+  ler_baseline_ensemble:
+    runs-on: ubuntu-latest
+    container:
+      image: eco4cast/rocker-neon4cast
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run ensemble generation
+        run: Rscript Models/ler_baselines_ensemble.R       
+  
