@@ -28,7 +28,10 @@ create_mme <- function(forecast_models, # vector of list of model names
       # remove sites that contain NAs
       filter(!any(is.na(prediction))) |> 
       ungroup() |> 
-      mutate(model_id = forecast_models[i])
+      mutate(model_id = forecast_models[i],
+             horizon = as_date(datetime) - as_date(forecast_date)) |> 
+      filter(horizon <= 30) |> 
+      select(-horizon)
     
     message(forecast_models[i], ' read in')
     
