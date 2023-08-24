@@ -18,52 +18,62 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   for (i in 1:length(forecast_models)) {
     # connect to the forecast bucket
-    s3_model <- s3_bucket(paste0(s3, 'model_id=', forecast_models[i], '/reference_datetime=',forecast_date),
+    s3_model <- s3_bucket(paste0(s3, 'model_id=', forecast_models[i], '/reference_datetime=', forecast_date),
                           endpoint_override= "data.ecoforecast.org")
 
-    forecast <- arrow::open_dataset(s3_model)  |>
-      collect() |> 
-      filter(variable == 'temperature') |>
-      group_by(site_id) |> 
-      # remove sites that contain NAs
-      filter(!any(is.na(prediction))) |> 
-      ungroup() |> 
-      mutate(model_id = forecast_models[i],
-             horizon = as_date(datetime) - as_date(forecast_date)) |> 
-      filter(horizon <= 30) |> 
-      select(-horizon)
-    
-    message(forecast_models[i], ' read in')
-    
-    # different workflow if the forecast is an ensemble (sample) or normal family
-    if (forecast$family[1] != 'sample') {
-      forecast_normal <- forecast |> 
-        
-        pivot_wider(names_from = parameter,
-                    values_from = prediction, 
-                    id_cols = c(datetime, site_id, model_id)) |> 
-        
-        group_by(site_id, datetime, model_id) |> 
-        # sample from the distribution based on the mean and sd
-        summarise(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
-        group_by(site_id, datetime) |> 
-        # parameter value needs to be character
-        mutate(parameter = as.character(row_number()),
-               # model_id = ensemble_name, 
-               reference_datetime = forecast_date,
-               variable = 'temperature',
-               family = 'ensemble')
-      mme_forecast <- bind_rows(mme_forecast, forecast_normal) 
-    } else { # for an ensemble forecast
-      forecast_sample <- forecast %>%
-        distinct(parameter) %>%
-        slice_sample(n = sample) %>%
-        left_join(., forecast, by = "parameter", multiple = 'all') %>%
-        mutate(#model_id = ensemble_name, 
-               reference_datetime = forecast_date,
-               parameter = as.character(parameter)) 
-      mme_forecast <- bind_rows(mme_forecast, forecast_sample) 
+    if (class(try(s3_model$ls(), silent = T)) == 'try-error') {
+      message('forecast model ', forecast_models[i], ' not available, skipping MME for ', as.character(forecast_date))
+      return(NA)
+      stop()
+    } else {
+      
+      forecast <- arrow::open_dataset(s3_model) |>
+        collect() |> 
+        filter(variable == 'temperature') |>
+        group_by(site_id) |> 
+        # remove sites that contain NAs
+        filter(!any(is.na(prediction))) |> 
+        ungroup() |> 
+        mutate(model_id = forecast_models[i],
+               horizon = as_date(datetime) - as_date(forecast_date)) |> 
+        filter(horizon <= 30) |> 
+        select(-horizon)
+      
+      message(forecast_models[i], ' read in')
+      
+      # different workflow if the forecast is an ensemble (sample) or normal family
+      if (forecast$family[1] != 'sample') {
+        forecast_normal <- forecast |> 
+          
+          pivot_wider(names_from = parameter,
+                      values_from = prediction, 
+                      id_cols = c(datetime, site_id, model_id)) |> 
+          
+          group_by(site_id, datetime, model_id) |> 
+          # sample from the distribution based on the mean and sd
+          summarise(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
+          group_by(site_id, datetime) |> 
+          # parameter value needs to be character
+          mutate(parameter = as.character(row_number()),
+                 # model_id = ensemble_name, 
+                 reference_datetime = forecast_date,
+                 variable = 'temperature',
+                 family = 'ensemble')
+        mme_forecast <- bind_rows(mme_forecast, forecast_normal) 
+      } else { # for an ensemble forecast
+        forecast_sample <- forecast %>%
+          distinct(parameter) %>%
+          slice_sample(n = sample) %>%
+          left_join(., forecast, by = "parameter", multiple = 'all') %>%
+          mutate(#model_id = ensemble_name, 
+            reference_datetime = forecast_date,
+            parameter = as.character(parameter)) 
+        mme_forecast <- bind_rows(mme_forecast, forecast_sample) 
+      }
+      
     }
+    
+    
     
   }
   
