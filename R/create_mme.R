@@ -102,6 +102,7 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   #Check for all models
   if (length(unique(mme_forecast$parameter)) != (n_models* round(n / n_models, digits = 0))) {
+    return(NA)
     stop('you are missing some ensemble members, there may be forecasts missing!')
   }
   
