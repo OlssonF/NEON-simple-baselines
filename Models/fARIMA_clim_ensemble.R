@@ -39,6 +39,7 @@ neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
 
 
 # check for any missing forecasts
+message("==== Checking for missed forecasts ====")
 challenge_model_name <- 'fARIMA_clim_ensemble'
 
 

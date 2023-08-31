@@ -38,6 +38,8 @@ mme_file <- create_mme(forecast_models = c('persistenceRW',
 neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
 
 # check for any missing forecasts
+
+message("==== Checking for missed forecasts ====")
 challenge_model_name <- 'baseline_ensemble'
 
 
