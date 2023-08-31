@@ -71,13 +71,13 @@ if (length(missed_dates) != 0) {
     
     if (!is.na(forecast_file)) {
       neon4cast::submit(file.path('./Forecasts/', forecast_file), ask = F)
+      message('submitting new climatology forecast')
     }
     
   }
 }
-
 #=========== persistence ===============
-message("==== Checking for missed climatology forecasts ====")
+message("==== Checking for missed persistence forecasts ====")
 challenge_model_name <- 'persistenceRW'
 
 
@@ -118,6 +118,8 @@ if (length(missed_dates) != 0) {
     
     if (!is.na(forecast_file)) {
       neon4cast::submit(file.path('./Forecasts/', forecast_file), ask = F)
+      message('submitting new persistence forecast')
+      
     }
     
   }
