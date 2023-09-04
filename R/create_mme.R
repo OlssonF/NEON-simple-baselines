@@ -4,11 +4,13 @@ create_mme <- function(forecast_models, # vector of list of model names
                        n = 200, # what size ensemble do you want?
                        ensemble_name, # what is the name of the ensemble output
                        forecast_date, # when is the forecast for (what forecast to grab)
-                       s3 = s3) # the s3 region to look for the forecasts
+                       var, # which variable do you want a forecast for
+                       h = 30, # what is the required forecast horizon
+                       theme) # challenge theme
   {
   
   message('generating ensemble for ', 
-          paste(forecast_models, sep="' '", collapse=", "))
+          paste(forecast_models, sep="' '", collapse=", "), ' on ', forecast_date)
   
   # How many from each forecast should be sampled
   n_models <- length(forecast_models)
@@ -18,25 +20,26 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   for (i in 1:length(forecast_models)) {
     # connect to the forecast bucket
-    s3_model <- s3_bucket(paste0(s3, 'model_id=', forecast_models[i], '/reference_datetime=', forecast_date),
+    s3_model <- s3_bucket(paste0('neon4cast-forecasts/parquet/', theme, '/model_id=', 
+                                 forecast_models[i], '/reference_datetime=', forecast_date),
                           endpoint_override= "data.ecoforecast.org")
 
     if (class(try(s3_model$ls(), silent = T)) == 'try-error') {
-      message('forecast model ', forecast_models[i], ' not available, skipping MME for ', as.character(forecast_date))
+      message('Error: forecast model ', forecast_models[i], ' not available, skipping MME for ', as.character(forecast_date))
       return(NA)
       stop()
     } else {
       
       forecast <- arrow::open_dataset(s3_model) |>
         collect() |> 
-        filter(variable == 'temperature') |>
+        filter(variable == var) |>
         group_by(site_id) |> 
         # remove sites that contain NAs
         filter(!any(is.na(prediction))) |> 
         ungroup() |> 
         mutate(model_id = forecast_models[i],
                horizon = as_date(datetime) - as_date(forecast_date)) |> 
-        filter(horizon <= 30) |> 
+        filter(horizon <= h) |> 
         select(-horizon)
       
       message(forecast_models[i], ' read in')
@@ -44,7 +47,7 @@ create_mme <- function(forecast_models, # vector of list of model names
       # different workflow if the forecast is an ensemble (sample) or normal family
       if (forecast$family[1] != 'sample') {
         forecast_normal <- forecast |> 
-          
+          select(datetime, site_id, variable, family, parameter, prediction, model_id) |> 
           pivot_wider(names_from = parameter,
                       values_from = prediction, 
                       id_cols = c(datetime, site_id, model_id)) |> 
@@ -57,18 +60,25 @@ create_mme <- function(forecast_models, # vector of list of model names
           mutate(parameter = as.character(row_number()),
                  # model_id = ensemble_name, 
                  reference_datetime = forecast_date,
-                 variable = 'temperature',
+                 variable = var,
                  family = 'ensemble')
         mme_forecast <- bind_rows(mme_forecast, forecast_normal) 
       } else { # for an ensemble forecast
-        forecast_sample <- forecast %>%
-          distinct(parameter) %>%
-          slice_sample(n = sample) %>%
-          left_join(., forecast, by = "parameter", multiple = 'all') %>%
-          mutate(#model_id = ensemble_name, 
-            reference_datetime = forecast_date,
-            parameter = as.character(parameter)) 
-        mme_forecast <- bind_rows(mme_forecast, forecast_sample) 
+        if (sample <= length(unique(forecast$parameter))) {
+          forecast_sample <- forecast %>%
+            distinct(parameter) %>%
+            slice_sample(n = sample) %>%
+            left_join(., forecast, by = "parameter", multiple = 'all') %>%
+            mutate(#model_id = ensemble_name, 
+              reference_datetime = forecast_date,
+              parameter = as.character(parameter)) 
+          mme_forecast <- bind_rows(mme_forecast, forecast_sample)
+        } else {
+          message('Error: forecast model ', forecast_models[i], ' only has ', length(unique(forecast$parameter)), ' ensemble members. Reduce sample n')
+          return(NA)
+          stop() 
+        }
+         
       }
       
     }
@@ -88,7 +98,7 @@ create_mme <- function(forecast_models, # vector of list of model names
       complete(site_id, model_id) |> 
       group_by(site_id) |> 
       filter(!any(is.na(prediction))) 
-    message('not all sites are represented by all models, subsetting sites')
+    message('Warning: not all sites are represented by all models, subsetting sites')
     message(paste(unique(mme_forecast$site_id), sep="' '", collapse=", "))
   }
   
@@ -103,10 +113,10 @@ create_mme <- function(forecast_models, # vector of list of model names
   #Check for all models
   if (length(unique(mme_forecast$parameter)) != (n_models* round(n / n_models, digits = 0))) {
     return(NA)
-    stop('you are missing some ensemble members, there may be forecasts missing!')
+    stop('Error: you are missing some ensemble members, there may be forecasts missing!')
   }
   
-  filename <- paste0('aquatics-', forecast_date, '-', ensemble_name, '.csv.gz')
+  filename <- paste0(theme, '-', forecast_date, '-', ensemble_name, '.csv.gz')
   mme_forecast |>
     select(-any_of(c('pubDate', 'date'))) |> 
     readr::write_csv(file.path('./Forecasts/ensembles', filename))
