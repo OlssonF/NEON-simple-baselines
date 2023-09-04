@@ -1,13 +1,8 @@
 library(tidyverse)
-library(lubridate)
-library(aws.s3)
-library(prov)
-library(EFIstandards)
-library(EML)
-library(jsonlite)
-library(imputeTS)
 library(tsibble)
+library(aws.s3)
 
+source("R/generate_baselines.R")
 
 Sys.unsetenv("AWS_ACCESS_KEY_ID")
 Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
@@ -75,6 +70,8 @@ if (length(missed_dates) != 0) {
     }
     
   }
+} else {
+  message('no new climatology forecasts')  
 }
 #=========== persistence ===============
 message("==== Checking for missed persistence forecasts ====")
@@ -123,5 +120,7 @@ if (length(missed_dates) != 0) {
     }
     
   }
+}else {
+  message('no new climatology forecasts')  
 }
 
