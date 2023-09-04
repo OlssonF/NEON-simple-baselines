@@ -103,7 +103,7 @@ generate_climatology <- function(forecast_date,
 
 
 
-generate_climatology <- function(forecast_date, 
+generate_persistenceRW <- function(forecast_date, 
                                  forecast_name = 'persistenceRW',
                                  target_url,
                                  sites) {
