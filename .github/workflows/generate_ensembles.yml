@@ -50,5 +50,17 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run ensemble generation
-        run: Rscript Models/ler_baselines_ensemble.R       
+        run: Rscript Models/ler_baselines_ensemble.R 
+  
+  phenology_ensembles:
+    runs-on: ubuntu-latest
+    container:
+      image: eco4cast/rocker-neon4cast
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run ensemble generation
+        run: Rscript Models/phenology_ensembles.R 
   
