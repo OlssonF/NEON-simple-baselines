@@ -11,6 +11,13 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
                             noaa_future, #dateframe containing the relevant noaa data
                             noaa_past) { #dateframe containing the relevant noaa data
  
+  
+  # First check that the NOAA data looks right
+  if (min(noaa_future$datetime) != forecast_date) {
+    return(NA)
+    stop('Error: NOAA forecast is not correct!')
+  }
+  
   # Target data
   targets <- readr::read_csv(target_url, guess_max = 1e6, show_col_types = F) |> 
     filter(site_id %in% sites,
@@ -55,13 +62,13 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
     past_weather <- bind_rows(past_weather, subset_past_weather)
   }
   
-  noaa_vars <- noaa_future |> 
-    ungroup() |> 
-    select(-c(datetime, site_id, parameter)) |> 
-    colnames()
+  # noaa_vars <- noaa_future |> 
+  #   ungroup() |> 
+  #   select(-c(datetime, site_id, parameter)) |> 
+  #   colnames()
   
   past_weather <- past_weather %>%
-    group_by(site_id, get(noaa_vars)) %>%
+    group_by(site_id, air_temperature) %>%
     mutate(parameter = row_number())
   
   
@@ -88,8 +95,10 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
   message('ARIMA fitted')
   
   # Forecast using the fitted model
+  times  <- round(n/31) # for each NOAA ensemble member how many times should the model run
+  
   ARIMA_fable <- ARIMA_model %>%
-    generate(new_data = test_scenarios, bootstrap = T, times = 10) %>%
+    generate(new_data = test_scenarios, bootstrap = T, times = times) %>%
     mutate(variable = var,
            # Recode the ensemble number based on the scenario and replicate
            parameter = as.numeric(.rep) + (10 * (as.numeric(.scenario) - 1)))  %>%
