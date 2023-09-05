@@ -64,6 +64,11 @@ this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'
 challenge_s3_region <- "data"
 challenge_s3_endpoint <- "ecoforecast.org"
 
+Sys.unsetenv("AWS_ACCESS_KEY_ID")
+Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
+Sys.unsetenv("AWS_DEFAULT_REGION")
+Sys.unsetenv("AWS_S3_ENDPOINT")
+
 # is that file present in the bucket?
 for (i in 1:nrow(this_year)) {
   forecast_file <- paste0('aquatics-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
@@ -89,7 +94,7 @@ for (i in 1:length(missed_dates)) {
   noaa_data <- download_noaa(sites = sites,
                              forecast_date = forecast_date)
   
-  if (!is.na(noaa_data)) {
+  if (is(noaa_data)) {
     # Generate the forecasts
     fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
                                    sites = sites,
@@ -146,6 +151,11 @@ this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'
 challenge_s3_region <- "data"
 challenge_s3_endpoint <- "ecoforecast.org"
 
+Sys.unsetenv("AWS_ACCESS_KEY_ID")
+Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
+Sys.unsetenv("AWS_DEFAULT_REGION")
+Sys.unsetenv("AWS_S3_ENDPOINT")
+
 # is that file present in the bucket?
 for (i in 1:nrow(this_year)) {
   forecast_file <- paste0('aquatics-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
@@ -171,7 +181,7 @@ for (i in 1:length(missed_dates)) {
   noaa_data <- download_noaa(sites = sites,
                              forecast_date = forecast_date)
   
-  if (!is.na(noaa_data)){
+  if (is.list(noaa_data) != T){
     # Generate the forecasts
     fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
                                      sites = sites,
