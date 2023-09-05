@@ -33,8 +33,11 @@ mme_file <- create_mme(forecast_models = c('flareGLM',
                                'flareGOTM',
                                'flareSimstrat'),
                        ensemble_name = 'flare_ler',
-                       forecast_date = forecast_date,
-                       s3 = s3, n = 200)
+                       forecast_date = forecast_date, 
+                       var = 'temperature', 
+                       h = 30, 
+                       theme = 'aquatics',
+                       n = 200)
 
 neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
 
@@ -77,7 +80,10 @@ for (i in 1:length(missed_dates)) {
                                              'flareSimstrat'),
                          ensemble_name = 'flare_ler',
                          forecast_date = date,
-                         s3 = s3, n = 200)
+                         var = 'temperature', 
+                         h = 30, 
+                         theme = 'aquatics',
+                         n = 200)
   if (!is.na(mme_file)) {
     neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
   }
