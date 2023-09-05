@@ -133,7 +133,7 @@ fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
                                  noaa_future = noaa_data_today$future, 
                                  noaa_past = noaa_data_today$past)
 # Submit forecast!
-neon4cast::submit(forecast_file = fTSLM_file,
+neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
                   ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
 
 # Check for missing forecasts
