@@ -94,7 +94,7 @@ for (i in 1:length(missed_dates)) {
   noaa_data <- download_noaa(sites = sites,
                              forecast_date = forecast_date)
   
-  if (is(noaa_data)) {
+  if (is.list(noaa_data) != T) {
     # Generate the forecasts
     fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
                                    sites = sites,
