@@ -10,7 +10,14 @@ download_noaa <- function(sites,
   
   # New forecast only available at 5am UTC the next day
   noaa_date <- forecast_date - days(1)
-  df_future <- neon4cast::noaa_stage2(start_date = noaa_date)
+
+  if (class(try(neon4cast::noaa_stage2(start_date = noaa_date), silent = T))[1] == 'try-error') {
+    return(NA)
+    stop('No NOAA forecast available for ', noaa_date, ' skipping')
+    
+  } else {
+    df_future <- neon4cast::noaa_stage2(start_date = noaa_date)
+  }
   
   # Only need the air temperature from the test_site
   noaa_past <- df_past |> 
