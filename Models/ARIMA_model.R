@@ -29,8 +29,9 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
     group_by(variable, site_id) %>%
     # Start the day after the most recent non-NA value
     dplyr::summarise(start_date = max(datetime) + lubridate::days(1)) %>% # Date
-    dplyr::mutate(h = (forecast_date - start_date) + h) %>% # Horizon value
-    dplyr::filter(variable == 'temperature') %>%
+    dplyr::mutate(h = ifelse(forecast_date - start_date < 0, h,
+                             (forecast_date - start_date + h))) %>% # Horizon value
+    dplyr::filter(variable == var) %>%
     dplyr::ungroup()
   
   
@@ -40,7 +41,7 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
     pivot_wider(names_from = "variable", values_from = "observation") %>%
     filter(!is.na(temperature))
   
-  targets <- left_join(targets, noaa_past, by = c("datetime","site_id"))
+  targets <- inner_join(targets, noaa_past, by = c("datetime","site_id"))
   
   
   
