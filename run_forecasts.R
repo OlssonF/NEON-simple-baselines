@@ -59,7 +59,8 @@ challenge_model_name <- 'fARIMA'
 today <- paste(Sys.Date() - days(2), '00:00:00')
 this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
                         exists = NA)
-
+# issue resolved on 9 Oct 2023
+end <- as_date('2023-10-09')
 # what forecasts have already been submitted?
 challenge_s3_region <- "data"
 challenge_s3_endpoint <- "ecoforecast.org"
@@ -77,13 +78,28 @@ for (i in 1:nrow(this_year)) {
                                                                 bucket = "neon4cast-forecasts",
                                                                 region = challenge_s3_region,
                                                                 base_url = challenge_s3_endpoint))
+  
+  # if it is present, has it been submitted recently?
+  if (this_year$exists[i]) {
+    modified <- attr(suppressMessages(aws.s3::head_object(object = file.path("raw", 'aquatics', forecast_file),
+                                                          bucket = "neon4cast-forecasts",
+                                                          region = challenge_s3_region,
+                                                          base_url = challenge_s3_endpoint)), 
+                     "last-modified")
+    
+    this_year$already_rerun[i] <- ifelse(parse_date_time(gsub('GMT', '', str_split_1(modified, ', ')[2]),
+                                                         orders = "%d %b %Y %H:%M:%S") > end, 
+                                         T, F)
+  }
 }
 
 # which dates do you need to generate forecasts for?
+# those that are missing or haven't been submitted
 missed_dates <- this_year |> 
-  filter(exists == F) |> 
+  filter(!(exists == T &  already_rerun == T)) |> 
   pull(date) |> 
   as_date()
+
 
 
 for (i in 1:length(missed_dates)) {
@@ -164,11 +180,25 @@ for (i in 1:nrow(this_year)) {
                                                                 bucket = "neon4cast-forecasts",
                                                                 region = challenge_s3_region,
                                                                 base_url = challenge_s3_endpoint))
+  
+  # if it is present, has it been submitted recently?
+  if (this_year$exists[i]) {
+    modified <- attr(suppressMessages(aws.s3::head_object(object = file.path("raw", 'aquatics', forecast_file),
+                                                          bucket = "neon4cast-forecasts",
+                                                          region = challenge_s3_region,
+                                                          base_url = challenge_s3_endpoint)), 
+                     "last-modified")
+    
+    this_year$already_rerun[i] <- ifelse(parse_date_time(gsub('GMT', '', str_split_1(modified, ', ')[2]),
+                                                         orders = "%d %b %Y %H:%M:%S") > end, 
+                                         T, F)
+  }
 }
 
 # which dates do you need to generate forecasts for?
+# those that are missing or haven't been submitted
 missed_dates <- this_year |> 
-  filter(exists == F) |> 
+  filter(!(exists == T &  already_rerun == T)) |> 
   pull(date) |> 
   as_date()
 
