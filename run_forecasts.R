@@ -120,6 +120,10 @@ for (i in 1:length(missed_dates)) {
 #----------------------------------------------------------#
 
 # fTSLM_lag forecasts -----------------------------------------------------
+Sys.unsetenv("AWS_ACCESS_KEY_ID")
+Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
+Sys.unsetenv("AWS_DEFAULT_REGION")
+Sys.unsetenv("AWS_S3_ENDPOINT")
 # Generate the TSLM forecasts
 message('generating todays TSML forecast')
 fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
