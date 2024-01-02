@@ -90,6 +90,7 @@ create_mme <- function(forecast_models, # vector of list of model names
   # Check for all sites represented in all models
   site_model_combinations <- nrow(mme_forecast |> distinct(model_id, site_id))
   all_combinations <- nrow(mme_forecast |> distinct(model_id)) * nrow(mme_forecast |> distinct(site_id))
+  all_sites <- mme_forecast |> distinct(site_id) |> pull()
   
   if (site_model_combinations != all_combinations) {
     
@@ -99,7 +100,9 @@ create_mme <- function(forecast_models, # vector of list of model names
       group_by(site_id) |> 
       filter(!any(is.na(prediction))) 
     message('Warning: not all sites are represented by all models, subsetting sites')
-    message(paste(unique(mme_forecast$site_id), sep="' '", collapse=", "))
+    message(paste0(paste(unique(mme_forecast$site_id), sep="' '", collapse=", ")), ' submitted')
+    message(paste0(paste(all_sites[which(!all_sites %in% unique(mme_forecast$site_id))], sep = "' ", collapse = ', '), ' omitted')
+)
   }
   
   # need to recode the parameter values so each is unqiue
