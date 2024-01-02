@@ -27,7 +27,7 @@ if (dir.exists('./Forecasts/') != T) {
   dir.create('./Forecasts/', recursive = T)
 }
 
-
+message('Download NOAA')
 # Download the NOAA data needed
 noaa_data_today <- download_noaa(sites = sites,
                                  forecast_date = forecast_today)
@@ -35,6 +35,7 @@ noaa_data_today <- download_noaa(sites = sites,
 
 # fARIMA forecasts --------------------------------------------------------
 # Generate the forecasts
+message('Running fARIMA forecast')
 fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
                                sites = sites,
                                var = 'temperature',
@@ -46,6 +47,7 @@ fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
                                noaa_future = noaa_data_today$future, 
                                noaa_past = noaa_data_today$past)
 # Submit forecast!
+message('submit fARIMA')
 neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
                   ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
 
@@ -123,6 +125,7 @@ for (i in 1:length(missed_dates)) {
                                    noaa_future = noaa_data$future, 
                                    noaa_past = noaa_data$past)
     # Submit forecast!
+    message('submitting missing fARIMA forecast')
     neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
                       ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
   } else {
@@ -153,6 +156,7 @@ fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
                                  noaa_future = noaa_data_today$future, 
                                  noaa_past = noaa_data_today$past)
 # Submit forecast!
+message('submit TSLM forecast')
 neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
                   ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
 
@@ -228,6 +232,7 @@ for (i in 1:length(missed_dates)) {
                                      noaa_future = noaa_data$future, 
                                      noaa_past = noaa_data$past)
     # Submit forecast!
+    message('submitting missing TSLM forecast')
     neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
                       ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
   } else {
