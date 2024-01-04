@@ -49,7 +49,7 @@ fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
 # Submit forecast!
 message('submit fARIMA')
 neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
-                  ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
+                  ask = F)
 
 # Check for missing forecasts
 message('Checking for missing ARIMA forecasts')
@@ -127,7 +127,7 @@ for (i in 1:length(missed_dates)) {
     # Submit forecast!
     message('submitting missing fARIMA forecast')
     neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
-                      ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
+                      ask = F)
   } else {
     message('Cannot submit forecast for this date')
   }
@@ -158,7 +158,7 @@ fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
 # Submit forecast!
 message('submit TSLM forecast')
 neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
-                  ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
+                  ask = F)
 
 # Check for missing forecasts
 message('Checking for missing TSLM forecasts')
@@ -234,7 +234,7 @@ for (i in 1:length(missed_dates)) {
     # Submit forecast!
     message('submitting missing TSLM forecast')
     neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
-                      ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
+                      ask = F)
   } else {
     message('Cannot submit forecast for this date')
   }
