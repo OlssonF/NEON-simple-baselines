@@ -158,7 +158,7 @@ fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
 # Submit forecast!
 message('submit TSLM forecast')
 neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
-                  ask = F)
+                  ask = F, s3_region = 'submit', s3_endpoint = 'ecoforecast.org')
 
 # Check for missing forecasts
 message('Checking for missing TSLM forecasts')
@@ -234,7 +234,7 @@ for (i in 1:length(missed_dates)) {
     # Submit forecast!
     message('submitting missing TSLM forecast')
     neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
-                      ask = F)
+                      ask = F, s3_region = 'data', s3_endpoint = 'ecoforecast.org')
   } else {
     message('Cannot submit forecast for this date')
   }
