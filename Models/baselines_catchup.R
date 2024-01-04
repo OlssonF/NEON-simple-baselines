@@ -35,7 +35,7 @@ this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'
                         exists = NA)
 
 # what forecasts have already been submitted?
-challenge_s3_region <- "data"
+challenge_s3_region <- "submit"
 challenge_s3_endpoint <- "ecoforecast.org"
 
 # is that file present in the bucket?
@@ -84,7 +84,7 @@ this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'
                         exists = NA)
 
 # what forecasts have already been submitted?
-challenge_s3_region <- "data"
+challenge_s3_region <- "submit"
 challenge_s3_endpoint <- "ecoforecast.org"
 
 # is that file present in the bucket?
