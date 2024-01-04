@@ -99,7 +99,7 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
   times  <- round(n/31) # for each NOAA ensemble member how many times should the model run
   
   ARIMA_fable <- ARIMA_model %>%
-    generate(new_data = test_scenarios, bootstrap = T, times = times) %>%
+    generate(new_data = test_scenarios[1:31], bootstrap = T, times = times) %>%
     mutate(variable = var,
            # Recode the ensemble number based on the scenario and replicate
            parameter = as.numeric(.rep) + (10 * (as.numeric(.scenario) - 1)))  %>%
