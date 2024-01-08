@@ -31,21 +31,22 @@ challenge_model_name <- 'climatology'
 
 # Dates of forecasts 
 today <- paste(Sys.Date() - days(2), '00:00:00')
-this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
+this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2024-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
                         exists = NA)
 
-# what forecasts have already been submitted?
-challenge_s3_region <- "submit"
-challenge_s3_endpoint <- "ecoforecast.org"
+# Get all the submissions 
+submissions <- aws.s3::get_bucket_df("bio230014-bucket01", 
+                                     prefix = "challenges/forecasts/raw",
+                                     region = "sdsc",
+                                     base_url = "osn.xsede.org",
+                                     max = Inf)
 
 # is that file present in the bucket?
 for (i in 1:nrow(this_year)) {
   forecast_file <- paste0('aquatics-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
   
-  this_year$exists[i] <- suppressMessages(aws.s3::object_exists(object = file.path("raw", 'aquatics', forecast_file),
-                                                                bucket = "neon4cast-forecasts",
-                                                                region = challenge_s3_region,
-                                                                base_url = challenge_s3_endpoint))
+  this_year$exists[i] <- nrow(dplyr::filter(submissions, stringr::str_detect(Key, forecast_file))) > 0
+  
 }
 
 # which dates do you need to generate forecasts for?
@@ -83,18 +84,14 @@ today <- paste(Sys.Date() - days(2), '00:00:00')
 this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
                         exists = NA)
 
-# what forecasts have already been submitted?
-challenge_s3_region <- "submit"
-challenge_s3_endpoint <- "ecoforecast.org"
+
 
 # is that file present in the bucket?
 for (i in 1:nrow(this_year)) {
   forecast_file <- paste0('aquatics-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
   
-  this_year$exists[i] <- suppressMessages(aws.s3::object_exists(object = file.path("raw", 'aquatics', forecast_file),
-                                                                bucket = "neon4cast-forecasts",
-                                                                region = challenge_s3_region,
-                                                                base_url = challenge_s3_endpoint))
+  this_year$exists[i] <- nrow(dplyr::filter(submissions, stringr::str_detect(Key, forecast_file))) > 0
+  
 }
 
 # which dates do you need to generate forecasts for?
