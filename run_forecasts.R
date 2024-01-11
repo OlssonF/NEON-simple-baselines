@@ -94,37 +94,39 @@ missed_dates <- this_year |>
   as_date()
 
 
-
-for (i in 1:length(missed_dates)) {
-
-  forecast_date <- missed_dates[i]
-
-  # Download the NOAA data needed
-  noaa_data <- download_noaa(sites = sites,
-                             forecast_date = forecast_date)
-
-  if (is.list(noaa_data)) {
-    # Generate the forecasts
-    fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
-                                   sites = sites,
-                                   var = 'temperature',
-                                   theme = 'aquatics',
-                                   forecast_date = forecast_date,
-                                   n = 200,
-                                   h = 30,
-                                   target_url = target_url,
-                                   noaa_future = noaa_data$future,
-                                   noaa_past = noaa_data$past)
-    # Submit forecast!
-    message('submitting missing fARIMA forecast')
-    neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
-                      ask = F)
-  } else {
-    message('Cannot submit forecast for this date')
+if (length(missed_dates) != 0) {
+  for (i in 1:length(missed_dates)) {
+    
+    forecast_date <- missed_dates[i]
+    
+    # Download the NOAA data needed
+    noaa_data <- download_noaa(sites = sites,
+                               forecast_date = forecast_date)
+    
+    if (is.list(noaa_data)) {
+      # Generate the forecasts
+      fARIMA_file <- generate_fARIMA(team_name = 'fARIMA',
+                                     sites = sites,
+                                     var = 'temperature',
+                                     theme = 'aquatics',
+                                     forecast_date = forecast_date,
+                                     n = 200,
+                                     h = 30,
+                                     target_url = target_url,
+                                     noaa_future = noaa_data$future,
+                                     noaa_past = noaa_data$past)
+      # Submit forecast!
+      message('submitting missing fARIMA forecast')
+      neon4cast::submit(forecast_file = file.path('Forecasts', fARIMA_file),
+                        ask = F)
+    } else {
+      message('Cannot submit forecast for ', forecast_date)
+    }
+    
   }
-
-
-
+  
+} else {
+  'No missing forecasts!'
 }
 
 #----------------------------------------------------------#
@@ -183,36 +185,40 @@ missed_dates <- this_year |>
   pull(date) |>
   as_date()
 
-
-for (i in 1:length(missed_dates)) {
-
-  forecast_date <- missed_dates[i]
-
-  # Download the NOAA data needed
-  noaa_data <- download_noaa(sites = sites,
-                             forecast_date = forecast_date)
-
-  if (is.list(noaa_data)){
-    # Generate the forecasts
-    fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
-                                     sites = sites,
-                                     var = 'temperature',
-                                     theme = 'aquatics',
-                                     forecast_date = forecast_date,
-                                     n = 200,
-                                     h = 30,
-                                     target_url = target_url,
-                                     noaa_future = noaa_data$future,
-                                     noaa_past = noaa_data$past)
-    # Submit forecast!
-    message('submitting missing TSLM forecast')
-    neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
-                      ask = F)
-  } else {
-    message('Cannot submit forecast for this date')
+if (length(missed_dates) !=0) {
+  for (i in 1:length(missed_dates)) {
+    
+    forecast_date <- missed_dates[i]
+    
+    # Download the NOAA data needed
+    noaa_data <- download_noaa(sites = sites,
+                               forecast_date = forecast_date)
+    
+    if (is.list(noaa_data)){
+      # Generate the forecasts
+      fTSLM_file <- generate_fTSLM_lag(team_name = 'fTSLM_lag',
+                                       sites = sites,
+                                       var = 'temperature',
+                                       theme = 'aquatics',
+                                       forecast_date = forecast_date,
+                                       n = 200,
+                                       h = 30,
+                                       target_url = target_url,
+                                       noaa_future = noaa_data$future,
+                                       noaa_past = noaa_data$past)
+      # Submit forecast!
+      message('submitting missing TSLM forecast')
+      neon4cast::submit(forecast_file = file.path('Forecasts', fTSLM_file),
+                        ask = F)
+    } else {
+      message('Cannot submit forecast for ', forecast_date)
+    }
+    
+    
+    
   }
-
-
-
+} else {
+  'No missing forecasts!'
 }
+
 #----------------------------------------------------------------#
