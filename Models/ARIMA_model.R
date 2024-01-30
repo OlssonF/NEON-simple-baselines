@@ -102,7 +102,7 @@ generate_fARIMA <- function(team_name = 'fARIMA', # model_id and challenge team 
     generate(new_data = test_scenarios[1:31], bootstrap = T, times = times) %>%
     mutate(variable = var,
            # Recode the ensemble number based on the scenario and replicate
-           parameter = as.numeric(.rep) + (10 * (as.numeric(.scenario) - 1)))  %>%
+           parameter = as.numeric(.rep) + (10 * (as.numeric(.scenario))))  %>%
     filter(datetime > forecast_date)
   message('forecast generated')
   
