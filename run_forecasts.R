@@ -20,7 +20,7 @@ sites <- readr::read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-t
 target_url <- "https://data.ecoforecast.org/neon4cast-targets/aquatics/aquatics-targets.csv.gz"
 
 # when do you want to generate the forecast for
-forecast_today <- Sys.Date() - days(1)
+forecast_today <- Sys.Date() 
 
 # generate ensembles
 if (dir.exists('./Forecasts/') != T) {
