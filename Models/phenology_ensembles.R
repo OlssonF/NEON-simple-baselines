@@ -45,117 +45,120 @@ neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
 
 
 # check for any missing forecasts
-# message("==== Checking for missed forecasts ====")
-# challenge_model_name <- 'prophet_clim_ensemble'
-# 
-# 
-# # Dates of forecasts 
-# today <- paste(Sys.Date() - days(2), '00:00:00')
-# this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
-#                         exists = NA)
-# 
-# # what forecasts have already been submitted?
-# challenge_s3_region <- "data"
-# challenge_s3_endpoint <- "ecoforecast.org"
-# 
-# # is that file present in the bucket?
-# for (i in 1:nrow(this_year)) {
-#   forecast_file <- paste0(theme, '-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
-#   
-#   this_year$exists[i] <- suppressMessages(aws.s3::object_exists(object = file.path("raw", 'phenology', forecast_file),
-#                                                                 bucket = "neon4cast-forecasts",
-#                                                                 region = challenge_s3_region,
-#                                                                 base_url = challenge_s3_endpoint))
-# }
-# 
-# # which dates do you need to generate forecasts for?
-# missed_dates <- this_year |> 
-#   filter(exists == F) |> 
-#   pull(date) |> 
-#   as_date()
-# 
-# for (i in 1:length(missed_dates)) {
-#   
-#   date <- missed_dates[i]
-#   
-#   # Ensemble = prophet + climatology
-#   mme_file <- create_mme(forecast_models = c('cb_prophet',
-#                                              'climatology'),
-#                          ensemble_name = 'prophet_clim_ensemble',
-#                          forecast_date = date, 
-#                          var = 'rcc_90',
-#                          h= 30,
-#                          theme = 'phenology',
-#                          n = 30)
-#   
-#   if (!is.na(mme_file)) {
-#     neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
-#   }  
-#   
-# }
-# 
-# 
-# # Ensemble 2 rcc--------------------------------------------------------------
-# 
-# mme_file <- create_mme(forecast_models = c('persistenceRW',
-#                                            'climatology'),
-#                        ensemble_name = 'baseline_ensemble',
-#                        forecast_date = forecast_date, 
-#                        var = 'rcc_90',
-#                        h= 30,
-#                        theme = 'phenology',
-#                        n = 200)
-# 
-# neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
-# 
+message("==== Checking for missed forecasts ====")
+challenge_model_name <- 'prophet_clim_ensemble'
 
-# # check for any missing forecasts
-# message("==== Checking for missed forecasts ====")
-# challenge_model_name <- 'baseline_ensemble'
-# 
-# 
-# # Dates of forecasts 
-# today <- paste(Sys.Date() - days(2), '00:00:00')
-# this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2023-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
-#                         exists = NA)
-# 
-# # what forecasts have already been submitted?
-# challenge_s3_region <- "data"
-# challenge_s3_endpoint <- "ecoforecast.org"
-# 
-# # is that file present in the bucket?
-# for (i in 1:nrow(this_year)) {
-#   forecast_file <- paste0(theme, '-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
-#   
-#   this_year$exists[i] <- suppressMessages(aws.s3::object_exists(object = file.path("raw", 'phenology', forecast_file),
-#                                                                 bucket = "neon4cast-forecasts",
-#                                                                 region = challenge_s3_region,
-#                                                                 base_url = challenge_s3_endpoint))
-# }
-# 
-# # which dates do you need to generate forecasts for?
-# missed_dates <- this_year |> 
-#   filter(exists == F) |> 
-#   pull(date) |> 
-#   as_date()
-# 
-# for (i in 1:length(missed_dates)) {
-#   
-#   date <- missed_dates[i]
-#   
-#   # Ensemble = persistence + climatology
-#   mme_file <- create_mme(forecast_models = c('persistenceRW',
-#                                              'climatology'),
-#                          ensemble_name = 'baseline_ensemble',
-#                          forecast_date = date, 
-#                          var = 'rcc_90',
-#                          h= 30,
-#                          theme = 'phenology',
-#                          n = 200)
-#   
-#   if (!is.na(mme_file)) {
-#     neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
-#   }  
-#   
-# }
+
+# Dates of forecasts
+today <- paste(Sys.Date() - days(2), '00:00:00')
+this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2024-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
+                        exists = NA)
+
+# what forecasts have already been submitted?
+submissions <- aws.s3::get_bucket_df("bio230014-bucket01", 
+                                     prefix = "challenges/forecasts/raw",
+                                     region = "sdsc",
+                                     base_url = "osn.xsede.org",
+                                     max = Inf)
+
+# is that file present in the bucket?
+for (i in 1:nrow(this_year)) {
+  
+  forecast_file <- paste0('phenology-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
+  
+  this_year$exists[i] <- nrow(dplyr::filter(submissions, stringr::str_detect(Key, forecast_file))) > 0 
+}
+
+
+# which dates do you need to generate forecasts for?
+missed_dates <- this_year |>
+  filter(exists == F) |>
+  pull(date) |>
+  as_date()
+
+for (i in 1:length(missed_dates)) {
+
+  date <- missed_dates[i]
+
+  # Ensemble = prophet + climatology
+  mme_file <- create_mme(forecast_models = c('cb_prophet',
+                                             'climatology'),
+                         ensemble_name = 'prophet_clim_ensemble',
+                         forecast_date = date,
+                         var = 'rcc_90',
+                         h= 30,
+                         theme = 'phenology',
+                         n = 30)
+
+  if (!is.na(mme_file)) {
+    neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
+  }
+
+}
+
+
+# Ensemble 2 rcc--------------------------------------------------------------
+
+mme_file <- create_mme(forecast_models = c('persistenceRW',
+                                           'climatology'),
+                       ensemble_name = 'baseline_ensemble',
+                       forecast_date = forecast_date,
+                       var = 'rcc_90',
+                       h= 30,
+                       theme = 'phenology',
+                       n = 200)
+
+neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
+
+# check for any missing forecasts
+message("==== Checking for missed forecasts ====")
+challenge_model_name <- 'baseline_ensemble'
+
+
+# Dates of forecasts
+today <- paste(Sys.Date() - days(2), '00:00:00')
+this_year <- data.frame(date = as.character(paste0(seq.Date(as_date('2024-01-01'), to = as_date(today), by = 'day'), ' 00:00:00')),
+                        exists = NA)
+
+# what forecasts have already been submitted?
+submissions <- aws.s3::get_bucket_df("bio230014-bucket01", 
+                                     prefix = "challenges/forecasts/raw",
+                                     region = "sdsc",
+                                     base_url = "osn.xsede.org",
+                                     max = Inf)
+
+# is that file present in the bucket?
+for (i in 1:nrow(this_year)) {
+  
+  forecast_file <- paste0('phenology-', as_date(this_year$date[i]), '-', challenge_model_name, '.csv.gz')
+  
+  this_year$exists[i] <- nrow(dplyr::filter(submissions, stringr::str_detect(Key, forecast_file))) > 0 
+}
+
+
+# which dates do you need to generate forecasts for?
+missed_dates <- this_year |>
+  filter(exists == F) |>
+  pull(date) |>
+  as_date()
+
+for (i in 1:length(missed_dates)) {
+
+  date <- missed_dates[i]
+
+  # Ensemble = persistence + climatology
+  mme_file <- create_mme(forecast_models = c('persistenceRW',
+                                             'climatology'),
+                         ensemble_name = 'baseline_ensemble',
+                         forecast_date = date,
+                         var = 'rcc_90',
+                         h= 30,
+                         theme = 'phenology',
+                         n = 200)
+
+  if (!is.na(mme_file)) {
+    neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
+  }
+
+}
 
