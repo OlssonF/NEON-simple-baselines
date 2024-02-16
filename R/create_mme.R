@@ -7,7 +7,7 @@ create_mme <- function(forecast_models, # vector of list of model names
                        var, # which variable do you want a forecast for
                        h = 30, # what is the required forecast horizon
                        theme) # challenge theme
-  {
+{
   
   message('generating ensemble for ', 
           paste(forecast_models, sep="' '", collapse=", "), ' on ', forecast_date)
@@ -20,10 +20,10 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   for (i in 1:length(forecast_models)) {
     # connect to the forecast bucket
-    s3_model <- s3_bucket(paste0('neon4cast-forecasts/parquet/', theme, '/model_id=', 
-                                 forecast_models[i], '/reference_datetime=', forecast_date),
-                          endpoint_override= "data.ecoforecast.org")
-
+    s3_model <- s3_bucket(paste0('bio230014-bucket01/challenges/forecasts/parquet/project_id=neon4cast/duration=P1D/variable=',var,
+                                 '/model_id=', forecast_models[i],'/reference_date=', forecast_date),
+                          endpoint_override = 'sdsc.osn.xsede.org/', anonymous = T)
+    
     if (class(try(s3_model$ls(), silent = T)) == 'try-error') {
       message('Error: forecast model ', forecast_models[i], ' not available, skipping MME for ', as.character(forecast_date))
       return(NA)
@@ -32,7 +32,6 @@ create_mme <- function(forecast_models, # vector of list of model names
       
       forecast <- arrow::open_dataset(s3_model) |>
         collect() |> 
-        filter(variable == var) |>
         group_by(site_id) |> 
         # remove sites that contain NAs
         filter(!any(is.na(prediction))) |> 
@@ -45,16 +44,16 @@ create_mme <- function(forecast_models, # vector of list of model names
       message(forecast_models[i], ' read in')
       
       # different workflow if the forecast is an ensemble (sample) or normal family
-      if (forecast$family[1] != 'sample') {
+      if (forecast$family[1] != 'ensemble') {
         forecast_normal <- forecast |> 
-          select(datetime, site_id, variable, family, parameter, prediction, model_id) |> 
+          select(datetime, site_id, family, parameter, prediction, model_id) |> 
           pivot_wider(names_from = parameter,
                       values_from = prediction, 
                       id_cols = c(datetime, site_id, model_id)) |> 
           
           group_by(site_id, datetime, model_id) |> 
           # sample from the distribution based on the mean and sd
-          summarise(prediction = rnorm(sample, mean = mu, sd = sigma)) |> 
+          summarise(prediction = rnorm(sample, mean = mu, sd = sigma), .groups = 'drop') |> 
           group_by(site_id, datetime) |> 
           # parameter value needs to be character
           mutate(parameter = as.character(row_number()),
@@ -69,16 +68,16 @@ create_mme <- function(forecast_models, # vector of list of model names
             distinct(parameter) %>%
             slice_sample(n = sample) %>%
             left_join(., forecast, by = "parameter", multiple = 'all') %>%
-            mutate(#model_id = ensemble_name, 
-              reference_datetime = forecast_date,
-              parameter = as.character(parameter)) 
+            mutate(variable = var, 
+                   reference_datetime = forecast_date,
+                   parameter = as.character(parameter)) 
           mme_forecast <- bind_rows(mme_forecast, forecast_sample)
         } else {
           message('Error: forecast model ', forecast_models[i], ' only has ', length(unique(forecast$parameter)), ' ensemble members. Reduce sample n')
           return(NA)
           stop() 
         }
-         
+        
       }
       
     }
@@ -102,7 +101,7 @@ create_mme <- function(forecast_models, # vector of list of model names
     message('Warning: not all sites are represented by all models, subsetting sites')
     message(paste0(paste(unique(mme_forecast$site_id), sep="' '", collapse=", ")), ' submitted')
     message(paste0(paste(all_sites[which(!all_sites %in% unique(mme_forecast$site_id))], sep = "' ", collapse = ', '), ' omitted')
-)
+    )
   }
   
   # need to recode the parameter values so each is unqiue
