@@ -37,7 +37,7 @@ mme_file <- create_mme(forecast_models = c('flareGLM',
            theme = 'aquatics',
            n = 200)
 
-neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
+neon4cast::submit(mme_file$file, ask = F)
 
 
 # check for any missing forecasts
@@ -85,8 +85,8 @@ for (i in 1:length(missed_dates)) {
                          h = 30,
                          theme = 'aquatics',
                          n = 200)
-  if (!is.na(mme_file)) {
-    neon4cast::submit(file.path('./Forecasts/ensembles', mme_file), ask = F)
+  if (is.list(mme_file)) {
+    neon4cast::submit(mme_file$file, ask = F)
   }
 
 
