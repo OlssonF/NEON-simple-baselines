@@ -109,7 +109,9 @@ create_mme <- function(forecast_models, # vector of list of model names
   mme_forecast <- mme_forecast |> 
     group_by(datetime, site_id) |> 
     mutate(parameter = row_number(),
-           family = 'ensemble') |> 
+           family = 'ensemble', 
+           project_id = 'neon4cast',
+           duration = 'P1D') |> 
     ungroup() |> 
     mutate(model_id = ensemble_name)
   
