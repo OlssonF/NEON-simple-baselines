@@ -121,7 +121,7 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   filename <- paste0(theme, '-', forecast_date, '-', ensemble_name, '.csv.gz')
   mme_forecast |>
-    select(-any_of(c('pubDate', 'date'))) |> 
+    select(-any_of(c('pubDate', 'date', 'pub_datetime'))) |> 
     readr::write_csv(file.path('./Forecasts/ensembles', filename))
   
   message(ensemble_name, ' generated')
