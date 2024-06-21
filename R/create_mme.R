@@ -6,7 +6,8 @@ create_mme <- function(forecast_models, # vector of list of model names
                        forecast_date, # when is the forecast for (what forecast to grab)
                        var, # which variable do you want a forecast for
                        h = 30, # what is the required forecast horizon
-                       theme) # challenge theme
+                       theme,
+                       save_loc = './Forecasts/ensembles') # challenge theme
 {
   
   message('generating ensemble for ', 
@@ -107,6 +108,7 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   # need to recode the parameter values so each is unqiue
   mme_forecast <- mme_forecast |> 
+    select(-any_of(c('pubDate', 'date', 'pub_datetime'))) |> 
     group_by(datetime, site_id) |> 
     mutate(parameter = row_number(),
            family = 'ensemble', 
@@ -123,20 +125,20 @@ create_mme <- function(forecast_models, # vector of list of model names
   
   filename <- paste0(theme, '-', forecast_date, '-', ensemble_name, '.csv.gz')
   mme_forecast |>
-    select(-any_of(c('pubDate', 'date', 'pub_datetime'))) |> 
-    readr::write_csv(file.path('./Forecasts/ensembles', filename))
+    readr::write_csv(file.path(save_loc, filename))
   
   message(ensemble_name, ' generated')
   
-  neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  neon4cast::forecast_output_validator(file.path(save_loc, filename))
   
   
-  valid <- neon4cast::forecast_output_validator(file.path('./Forecasts/ensembles', filename))
+  valid <- neon4cast::forecast_output_validator(file.path(save_loc, filename))
   
   if (!valid) {
-    file.remove(file.path('./Forecasts/ensembles', filename))
+    file.remove(file.path(save_loc, filename))
     message('forecast not valid')
   } else {
-    return(filename)
+    return(list(df = mme_forecast, 
+                file = file.path(save_loc, filename)))
   }
 }
