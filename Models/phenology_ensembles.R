@@ -41,8 +41,9 @@ mme_file <- create_mme(forecast_models = c('cb_prophet',
                        theme = 'phenology',
                        n = 30)
 
-neon4cast::submit(mme_file$file, ask = F)
-
+if (!is.na(mme_file)) {
+  neon4cast::submit(mme_file$file, ask = F)
+}
 
 # check for any missing forecasts
 message("==== Checking for missed forecasts ====")
