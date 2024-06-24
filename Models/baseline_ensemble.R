@@ -34,7 +34,7 @@ mme_file <- create_mme(forecast_models = c('persistenceRW',
                        theme = 'aquatics',
                        n = 200)
 
-if (!is.na(mme_file)) {
+if (is.list(mme_file)) {
   neon4cast::submit(mme_file$file, ask = F)
 }
 # check for any missing forecasts

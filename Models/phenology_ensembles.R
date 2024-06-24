@@ -41,7 +41,7 @@ mme_file <- create_mme(forecast_models = c('cb_prophet',
                        theme = 'phenology',
                        n = 30)
 
-if (!is.na(mme_file)) {
+if (is.list(mme_file)) {
   neon4cast::submit(mme_file$file, ask = F)
 }
 
@@ -91,7 +91,7 @@ for (i in 1:length(missed_dates)) {
                          theme = 'phenology',
                          n = 30)
 
-  if (!is.na(mme_file)) {
+  if (is.list(mme_file)) {
     neon4cast::submit(mme_file$file, ask = F)
   }
 
@@ -109,8 +109,9 @@ mme_file <- create_mme(forecast_models = c('persistenceRW',
                        theme = 'phenology',
                        n = 200)
 
-neon4cast::submit(mme_file$file, ask = F)
-
+if (is.list(mme_file)) {
+  neon4cast::submit(mme_file$file, ask = F)
+}
 # check for any missing forecasts
 message("==== Checking for missed forecasts ====")
 challenge_model_name <- 'baseline_ensemble'
